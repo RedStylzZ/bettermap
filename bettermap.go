@@ -1,6 +1,9 @@
 package bettermap
 
+import "sync"
+
 type BetterMap[K comparable, V any] struct {
+	sync.Mutex
 	m    map[K]V
 	keys []K
 }
@@ -40,6 +43,9 @@ func (b *BetterMap[K, V]) GetByValue(f func(value V) bool) []V {
 }
 
 func (b *BetterMap[K, V]) Set(key K, value V) (V, bool) {
+	b.Lock()
+	defer b.Unlock()
+
 	b.addKeyToList(key)
 	b.m[key] = value
 	v, ok := b.m[key]
@@ -47,6 +53,9 @@ func (b *BetterMap[K, V]) Set(key K, value V) (V, bool) {
 }
 
 func (b *BetterMap[K, V]) Remove(key K) {
+	b.Lock()
+	defer b.Unlock()
+
 	delete(b.m, key)
 
 	if idx := b.keyIndex(key); idx != -1 {
